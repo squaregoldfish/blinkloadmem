@@ -130,3 +130,6 @@ dmypy.json
 
 # VSCode project files
 .vscode/
+
+# User-customised files
+client_config.json
