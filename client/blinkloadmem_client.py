@@ -77,6 +77,7 @@ with blink1() as b1:
                 try:
                     data = None                    
                     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                        s.settimeout(2)
                         s.connect((host, port))
                         data = s.recv(1024)
                         
