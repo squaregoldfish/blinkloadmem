@@ -2,6 +2,7 @@ import time
 import json
 import socket
 from blink1.blink1 import blink1
+from datetime import datetime
 
 COLOR_SCALE = [
     {
@@ -66,48 +67,53 @@ with open('client_config.json') as f:
 
 with blink1() as b1:
     while True:
-        try:
-            server_found = False
 
-            server_index = 0
-            while not server_found and server_index < len(config):
-                host = config[server_index]['host']
-                port = config[server_index]['port']
-                
-                try:
-                    data = None                    
-                    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                        s.settimeout(2)
-                        s.connect((host, port))
-                        data = s.recv(1024)
-                        
-                    if data is not None:
-                        data = json.loads(data)
+        current_hour = datetime.now().hour
+        if current_hour > config['sleep']['after'] or current_hour < config['sleep']['before']:
+          b1.fade_to_rgb(300, 0, 0, 0)
+        else:        
+          try:
+              server_found = False
 
-                        load_percent = int(data['cpu']['load'] / data['cpu']['count'] * 100)
-                        mem_percent = int(data['memory']['percent_used'])
+              server_index = 0
+              while not server_found and server_index < len(config['hosts']):
+                  host = config['hosts'][server_index]['host']
+                  port = config['hosts'][server_index]['port']
+                  
+                  try:
+                      data = None                    
+                      with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                          s.settimeout(2)
+                          s.connect((host, port))
+                          data = s.recv(1024)
+                          
+                      if data is not None:
+                          data = json.loads(data)
 
-                        load_color = get_color(load_percent)
-                        b1.fade_to_rgb(300, load_color[0], load_color[1], load_color[2], 1)
+                          load_percent = int(data['cpu']['load'] / data['cpu']['count'] * 100)
+                          mem_percent = int(data['memory']['percent_used'])
 
-                        mem_color = get_color(mem_percent)
-                        b1.fade_to_rgb(300, mem_color[0], mem_color[1], mem_color[2], 2)
-                        
+                          load_color = get_color(load_percent)
+                          b1.fade_to_rgb(300, load_color[0], load_color[1], load_color[2], 1)
 
-                        server_found = True
-                except OSError as e:
-                    # This is usually a failure to connect
-                    # Not a problem since we move on to the next server
-                    pass
+                          mem_color = get_color(mem_percent)
+                          b1.fade_to_rgb(300, mem_color[0], mem_color[1], mem_color[2], 2)
+                          
 
-                server_index += 1
+                          server_found = True
+                  except OSError as e:
+                      # This is usually a failure to connect
+                      # Not a problem since we move on to the next server
+                      pass
 
-            if not server_found:
-                b1.play(5,7)
+                  server_index += 1
 
-        except Exception as e:
-            print(e)
-            b1.play(0,2)
+              if not server_found:
+                  b1.play(5,7)
+
+          except Exception as e:
+              print(e)
+              b1.play(0,2)
 
         time.sleep(5)
 
