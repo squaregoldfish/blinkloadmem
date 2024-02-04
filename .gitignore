@@ -133,3 +133,5 @@ dmypy.json
 
 # User-customised files
 client_config.json
+
+nohup.out
